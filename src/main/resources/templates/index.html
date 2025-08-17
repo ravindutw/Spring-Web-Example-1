@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring Web Example - API Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .response {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <h1>Spring Web Example - API Demo</h1>
+
+    <!-- Status Check -->
+    <div class="container">
+        <h2>1. Check API Status</h2>
+        <p>Test if the API is running</p>
+        <button onclick="checkStatus()">Check Status</button>
+        <div id="statusResponse" class="response" style="display:none;"></div>
+    </div>
+
+    <!-- Get Name by Username -->
+    <div class="container">
+        <h2>2. Get Name by Username</h2>
+        <p>Retrieve a user's name by their username</p>
+        <input type="text" id="usernameInput" placeholder="Enter username" />
+        <button onclick="getName()">Get Name</button>
+        <div id="nameResponse" class="response" style="display:none;"></div>
+    </div>
+
+    <!-- Create New User -->
+    <div class="container">
+        <h2>3. Create New User</h2>
+        <p>Add a new user to the system</p>
+        <input type="text" id="newUsername" placeholder="Username" />
+        <input type="text" id="newName" placeholder="Full Name" />
+        <button onclick="createUser()">Create User</button>
+        <div id="userResponse" class="response" style="display:none;"></div>
+    </div>
+
+    <script>
+        const baseUrl = '/app-api';
+
+        function showResponse(elementId, content, isError = false) {
+            const element = document.getElementById(elementId);
+            element.textContent = content;
+            element.style.display = 'block';
+            element.className = 'response ' + (isError ? 'error' : 'success');
+        }
+
+        async function checkStatus() {
+            try {
+                const response = await fetch(`${baseUrl}/status`);
+                const data = await response.text();
+                showResponse('statusResponse', `Status: ${data}`);
+            } catch (error) {
+                showResponse('statusResponse', `Error: ${error.message}`, true);
+            }
+        }
+
+        async function getName() {
+            const username = document.getElementById('usernameInput').value.trim();
+            if (!username) {
+                showResponse('nameResponse', 'Please enter a username', true);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${baseUrl}/name/${encodeURIComponent(username)}`);
+                if (response.ok) {
+                    const data = await response.text();
+                    showResponse('nameResponse', `Name: ${data}`);
+                } else {
+                    showResponse('nameResponse', `Error: ${response.status} - ${response.statusText}`, true);
+                }
+            } catch (error) {
+                showResponse('nameResponse', `Error: ${error.message}`, true);
+            }
+        }
+
+        async function createUser() {
+            const username = document.getElementById('newUsername').value.trim();
+            const name = document.getElementById('newName').value.trim();
+
+            if (!username || !name) {
+                showResponse('userResponse', 'Please enter both username and name', true);
+                return;
+            }
+
+            const user = {
+                userName: username,
+                name: name
+            };
+
+            try {
+                const response = await fetch(`${baseUrl}/new-user`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(user)
+                });
+
+                if (response.ok) {
+                    const data = await response.text();
+                    showResponse('userResponse', `Response: ${data}`);
+                    // Clear the form
+                    document.getElementById('newUsername').value = '';
+                    document.getElementById('newName').value = '';
+                } else {
+                    showResponse('userResponse', `Error: ${response.status} - ${response.statusText}`, true);
+                }
+            } catch (error) {
+                showResponse('userResponse', `Error: ${error.message}`, true);
+            }
+        }
+    </script>
+</body>
+</html>

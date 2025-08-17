@@ -1,12 +1,40 @@
 package com.ravinduw.demo.springwebexample1.repository;
 
 import com.ravinduw.demo.springwebexample1.entity.User;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
+import lombok.AllArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
 
-public interface UserRepo extends JpaRepository<User, String> {
+@Repository
+@AllArgsConstructor
+public class UserRepo {
 
-    @Query("SELECT u FROM User u WHERE u.userName = ?1")
-    User findByUserName(String userName);
+    private final JdbcTemplate jdbcTemplate;
+
+
+    public User findByUserName(String userName){
+
+        // SQL Query
+        String sql = "SELECT username, name FROM users WHERE username = ?";
+
+        // Using JdbcTemplate to execute the query and map the result to User object
+        return jdbcTemplate.queryForObject(sql, (result, rowNum) -> {
+                    User user = new User();
+                    user.setUserName(result.getString("username"));
+                    user.setName(result.getString("name"));
+                    return user;
+        }, userName);
+
+    }
+
+    public User save(User user) {
+
+        // SQL Query
+        String sql = "INSERT INTO users (username, name) VALUES (?, ?)";
+
+        // Using JdbcTemplate to execute the insert query
+        jdbcTemplate.update(sql, user.getUserName(), user.getName());
+        return user;
+    }
 
 }
